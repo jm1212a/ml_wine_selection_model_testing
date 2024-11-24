@@ -2,7 +2,9 @@
 title: "Group project - Wine - Jared Martin - R Code"
 author: "Jared Martin"
 date: "2024-11-24"
-output: html_document
+output:
+  pdf_document: default
+
 ---
 
 ```{r}
@@ -13,7 +15,7 @@ library(tree)
 
 ```
 
-## Cleaning and Preparing the data
+# Cleaning and Preparing the data
 
 The following code pulls in the two wine data sets, creates a new variable called wine type (red or white), makes quality and type factor variables, joins the two data sets together and saves the data as a csv.
 
@@ -37,7 +39,7 @@ wine_data %>%
   dplyr::select(quality, everything()) -> wine_data
 
 ```
-## Research Question #1: Can we predict the quality of a wine given its characteristic?
+# Research Question #1: Can we predict the quality of a wine given its characteristic?
 
 Each wine was given as ranking for quality between 0-10. Although in the data set the lowest level of quality is 3, while the highest is an 8. Given that there is more then two level of quality we will be using KKN and classification trees to predict the quality of the wine given it's characteristics. 
 
@@ -47,9 +49,9 @@ levels(wine_data$quality)
 
 ```
 
-### Method #1: KNN
+## Method #1: KNN
 
-#### 1. Spliting the data into a testing and training dataset. 
+### 1. Spliting the data into a testing and training dataset. 
 
 ```{r}
 set.seed(1)
@@ -73,7 +75,7 @@ dim(x.test)[1] == length(y.test)    # Test to see if length is the same. Should 
 
 ```
 
-#### 2. Determining the optimal number of nearest neighbors "K"
+### 2. Determining the optimal number of nearest neighbors "K"
 
 ```{r}
 
@@ -89,7 +91,7 @@ plot(class.rate)
 max(class.rate) # optimal number of K neighbors is 1
 
 ```
-#### 4. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
+### 4. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
 
 ```{r}
 
@@ -102,7 +104,7 @@ knn_cv_classification_rate <- mean(y.test == knn_cv_wine_quality)
 # Classification rate of .766
 
 ```
-#### 3. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
+### 3. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
 
 ```{r}
 
@@ -119,9 +121,9 @@ knn_cv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
 #Wow! Classification rate of 1!
 
 ```
-### Method #2: Classification Trees
+## Method #2: Classification Trees
 
-#### 1. Classification Tree for Quality 
+### 1. Classification Tree for Quality 
 
 ```{r}
 
@@ -134,7 +136,7 @@ summary(tree_wine_quality)
 # not all class are represented as terminal node classifications (3, 4 & 8 are not represented). 
 
 ```
-#### 2. Calculating the Classification Rate for Unprunned Tree 
+### 2. Calculating the Classification Rate for Unprunned Tree 
 
 ```{r}
 
@@ -146,7 +148,7 @@ tree_classification_rate <- mean(tree_hat == wine_test$quality)
 
 ```
 
-#### 3. Prunning the Classification tree on misclassifaction rate. 
+### 3. Prunning the Classification tree on misclassifaction rate. 
 
 ```{r}
 
@@ -163,7 +165,7 @@ plot(tree_cv_wine_quality)
 Tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 6)
 
 ```
-#### 4. Plotting Classification Tree
+### 4. Plotting Classification Tree
 
 ```{r}
 
@@ -171,7 +173,7 @@ plot(Tree_pruned_wine_quality, type = "uniform")
 text(Tree_pruned_wine_quality, cex = 0.6)
 
 ```
-#### 5. Cross Validation of the Classification Tree
+### 5. Cross Validation of the Classification Tree
 
 ```{r}
 
