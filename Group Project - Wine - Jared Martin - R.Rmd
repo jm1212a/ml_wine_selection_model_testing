@@ -1,0 +1,48 @@
+---
+title: "Group project - Wine - Jared Martin - R Code"
+author: "Jared Martin"
+date: "2024-11-24"
+output: html_document
+---
+
+```{r}
+
+library(tidyverse)
+library(stats)
+
+```
+
+## Cleaning and Preparing the data
+
+The following code pulls in the two wine data sets, creates a new variable called wine type (red or white), makes quality and type factor variables and join the two data sets togeather.
+
+```{r}
+
+wine_data <- rbind(read.csv("./Data/winequality-red.csv", sep = ";") %>%
+                     mutate(wine.type = "red"),
+                   read.csv("./Data/winequality-red.csv", sep = ";") %>%
+                     mutate(wine.type = "white")) %>% 
+  mutate(wine.type = as.factor(wine.type),
+         quality = as.factor(quality),
+         pH = as.double(pH))
+
+sapply(wine_data, class)
+
+```
+
+## Research Question #1: Can we predict the type of wine given its characteristic?
+
+### Method #1: Logistic Regression
+
+#### Using Variable Selection: Methods to detirem the best combination of variables to use.  
+
+```{r}
+
+levels(wine_data$wine.type)
+
+logistic_type <- glm( wine.type ~ pH , data = wine_data , family = "binomial" )
+
+summary(logistic_type)
+
+```
+
