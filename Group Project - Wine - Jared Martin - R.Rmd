@@ -9,6 +9,7 @@ output: html_document
 
 library(tidyverse)
 library(class)
+library(tree)
 
 ```
 
@@ -88,7 +89,7 @@ plot(class.rate)
 max(class.rate) # optimal number of K neighbors is 1
 
 ```
-#### 3. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
+#### 4. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
 
 ```{r}
 
@@ -97,6 +98,8 @@ knn_cv_wine_quality <- knn(x.train, x.test, y.train, 1)
 table(y.test, knn_cv_wine_quality) 
 
 knn_cv_classification_rate <- mean(y.test == knn_cv_wine_quality)
+
+# Classification rate of .766
 
 ```
 #### 3. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
@@ -116,6 +119,67 @@ knn_cv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
 #Wow! Classification rate of 1!
 
 ```
+### Method #2: Classification Trees
 
+#### 1. Classification Tree for Quality 
 
+```{r}
+
+tree_wine_quality <- tree(quality ~ ., data = wine_train)
+
+tree_wine_quality
+
+summary(tree_wine_quality)
+
+# not all class are represented as terminal node classifications (3, 4 & 8 are not represented). 
+
+```
+#### 2. Calculating the Classification Rate for Unprunned Tree 
+
+```{r}
+
+tree_hat <- predict(tree_wine_quality, wine_test, type = "class")
+
+table(tree_hat, wine_test$quality)
+
+tree_classification_rate <- mean(tree_hat == wine_test$quality)
+
+```
+
+#### 3. Prunning the Classification tree on misclassifaction rate. 
+
+```{r}
+
+# The optimal number of terminal nods on a tree is 8. The same number of terminal nods as the tree above; therefore no pruning is required. 
+
+set.seed(1)
+
+tree_cv_wine_quality <- cv.tree( tree_wine_quality, FUN = prune.misclass )  
+
+tree_cv_wine_quality
+
+plot(tree_cv_wine_quality)
+
+Tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 6)
+
+```
+#### 4. Plotting Classification Tree
+
+```{r}
+
+plot(Tree_pruned_wine_quality, type = "uniform")
+text(Tree_pruned_wine_quality, cex = 0.6)
+
+```
+#### 5. Cross Validation of the Classification Tree
+
+```{r}
+
+tree_hat <- predict(Tree_pruned_wine_quality, wine_test, type = "class")
+
+table(tree_hat, wine_test$quality)
+
+tree_pruned_classification_rate <- mean(tree_hat == wine_test$quality)
+
+```
 
