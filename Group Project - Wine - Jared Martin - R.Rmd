@@ -8,41 +8,114 @@ output: html_document
 ```{r}
 
 library(tidyverse)
-library(stats)
+library(class)
 
 ```
 
 ## Cleaning and Preparing the data
 
-The following code pulls in the two wine data sets, creates a new variable called wine type (red or white), makes quality and type factor variables and join the two data sets togeather.
+The following code pulls in the two wine data sets, creates a new variable called wine type (red or white), makes quality and type factor variables, joins the two data sets together and saves the data as a csv.
 
 ```{r}
 
-wine_data <- rbind(read.csv("./Data/winequality-red.csv", sep = ";") %>%
+rbind(read.csv("./Data/winequality-red.csv", sep = ";") %>%
                      mutate(wine.type = "red"),
                    read.csv("./Data/winequality-red.csv", sep = ";") %>%
-                     mutate(wine.type = "white")) %>% 
-  mutate(wine.type = as.factor(wine.type),
-         quality = as.factor(quality),
-         pH = as.double(pH))
+                     mutate(wine.type = "white"))  %>% 
+  write.csv( "./Data/wine_data.csv")
 
-sapply(wine_data, class)
+wine_data <- read_csv("./Data/wine_data.csv")
+
+wine_data$quality <- factor(wine_data$quality)
+
+wine_data$wine.type <- factor(wine_data$wine.type)
+
+wine_data[,2:14] -> wine_data
+
+wine_data %>% 
+  dplyr::select(quality, everything()) -> wine_data
 
 ```
+## Research Question #1: Can we predict the quality of a wine given its characteristic?
 
-## Research Question #1: Can we predict the type of wine given its characteristic?
-
-### Method #1: Logistic Regression
-
-#### Using Variable Selection: Methods to detirem the best combination of variables to use.  
+Each wine was given as ranking for quality between 0-10. Although in the data set the lowest level of quality is 3, while the highest is an 8. Given that there is more then two level of quality we will be using KKN and classification trees to predict the quality of the wine given it's characteristics. 
 
 ```{r}
 
-levels(wine_data$wine.type)
-
-logistic_type <- glm( wine.type ~ pH , data = wine_data , family = "binomial" )
-
-summary(logistic_type)
+levels(wine_data$quality)
 
 ```
+
+### Method #1: KNN
+
+#### 1. Spliting the data into a testing and training dataset. 
+
+```{r}
+set.seed(1)
+
+n <- nrow(wine_data)
+
+z <- sample(n, n/2)
+
+wine_test <- wine_data[z,]
+
+wine_train <- wine_data[-z,]
+
+x.train <- wine_train[,2:12]
+x.test <- wine_test[,2:12]
+
+y.train <- wine_train$quality  
+y.test <- wine_test$quality
+
+dim(x.train)[1] == length(y.train)  # Test to see if length is the same. Should be TRUE
+dim(x.test)[1] == length(y.test)    # Test to see if length is the same. Should be TRUE
+
+```
+
+#### 2. Determining the optimal number of nearest neighbors "K"
+
+```{r}
+
+class.rate = rep(0,20)      
+
+for (K in 1:20) {
+  knn.result = knn(x.train, x.test, y.train, K)
+  class.rate[K] = mean( y.test == knn.result )
+}
+
+plot(class.rate)
+
+max(class.rate) # optimal number of K neighbors is 1
+
+```
+#### 3. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
+
+```{r}
+
+knn_cv_wine_quality <- knn(x.train, x.test, y.train, 1) 
+
+table(y.test, knn_cv_wine_quality) 
+
+knn_cv_classification_rate <- mean(y.test == knn_cv_wine_quality)
+
+```
+#### 3. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
+
+```{r}
+
+y.test <- wine_data$quality
+
+x.train <- wine_data[,2:12]
+
+knn_loocv_wine_quality <- knn.cv(x.train, y.test, k = 1, prob = FALSE)
+
+table(y.test, knn_loocv_wine_quality)
+
+knn_cv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
+
+#Wow! Classification rate of 1!
+
+```
+
+
 
