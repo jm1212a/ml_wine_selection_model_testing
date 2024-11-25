@@ -12,6 +12,7 @@ output:
 library(tidyverse)
 library(class)
 library(tree)
+library(randomForest)
 
 ```
 
@@ -116,7 +117,7 @@ knn_loocv_wine_quality <- knn.cv(x.train, y.test, k = 1, prob = FALSE)
 
 table(y.test, knn_loocv_wine_quality)
 
-knn_cv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
+knn_loocv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
 
 #Wow! Classification rate of 1!
 
@@ -162,26 +163,84 @@ tree_cv_wine_quality
 
 plot(tree_cv_wine_quality)
 
-Tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 6)
+tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 6)
 
 ```
 ### 4. Plotting Classification Tree
 
 ```{r}
 
-plot(Tree_pruned_wine_quality, type = "uniform")
-text(Tree_pruned_wine_quality, cex = 0.6)
+plot(tree_pruned_wine_quality, type = "uniform")
+text(tree_pruned_wine_quality, cex = 0.6)
 
 ```
 ### 5. Cross Validation of the Classification Tree
 
 ```{r}
 
-tree_hat <- predict(Tree_pruned_wine_quality, wine_test, type = "class")
+tree_hat <- predict(tree_pruned_wine_quality, wine_test, type = "class")
 
 table(tree_hat, wine_test$quality)
 
 tree_pruned_classification_rate <- mean(tree_hat == wine_test$quality)
+
+```
+##Method #3: Random Forest
+
+### Creaing the Traing Random Forest
+
+```{r}
+
+set.seed(1)
+
+forest_wine_quality <- randomForest(quality ~ ., data = wine_train)
+
+forest_wine_quality
+
+importance(forest_wine_quality)
+
+varImpPlot(forest_wine_quality)
+
+```
+### Searching for the optimal number of trees and number of variables considerd at each branch.
+
+```{r}
+
+set.seed(1)
+
+for (m in 1:10) {
+  forest_wine_quality_m <- randomForest(quality ~ ., data = wine_train, 
+                                  mtry = m )
+  opt.tree <- which.min(forest_wine_quality_m$err.rate)
+  forest_wine_quality_m <- randomForest(quality ~ ., data = wine_train,
+                                        mtry = m, ntree = opt.tree)
+  yhat_rf_m <- predict(forest_wine_quality_m, newdata = wine_test, type = "class")
+  err.rate[m] <- 1-mean(wine_test$quality == yhat_rf_m)
+  n.trees[m] <- opt.tree
+}
+
+err.rate
+n.trees
+
+plot(err.rate); line(err.rate)
+
+plot(n.trees); line(n.trees)
+
+# optimal solution is 501 trees and 8 variables considered at each branch. 
+
+```
+### Cross Validation with Optimal number of trees and number of variables considerd at each branch.
+
+```{r}
+
+set.seed(1)
+
+forest_cv_wine_quality <- randomForest(quality ~ ., data = wine_train, 
+                                  mtry = 8, ntree = 501 )
+
+yhat_rf <- predict(forest_cv_wine_quality, newdata = wine_test, type = "class")
+
+forest_classification_rate <- mean(wine_test$quality == yhat_rf)
 
 ```
 
