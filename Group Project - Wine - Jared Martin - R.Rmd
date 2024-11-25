@@ -13,6 +13,7 @@ library(tidyverse)
 library(class)
 library(tree)
 library(randomForest)
+library(e1071)
 
 ```
 
@@ -92,7 +93,7 @@ plot(class.rate)
 max(class.rate) # optimal number of K neighbors is 1
 
 ```
-### 4. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
+### 3. Cross Validation - CClasification Rate and Confusion table using Optimal number of nearest Neighbors. 
 
 ```{r}
 
@@ -105,7 +106,7 @@ knn_cv_classification_rate <- mean(y.test == knn_cv_wine_quality)
 # Classification rate of .766
 
 ```
-### 3. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
+### 4. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
 
 ```{r}
 
@@ -187,7 +188,7 @@ tree_pruned_classification_rate <- mean(tree_hat == wine_test$quality)
 ```
 ##Method #3: Random Forest
 
-### Creaing the Traing Random Forest
+### 1. Creaing the Traing Random Forest
 
 ```{r}
 
@@ -202,11 +203,14 @@ importance(forest_wine_quality)
 varImpPlot(forest_wine_quality)
 
 ```
-### Searching for the optimal number of trees and number of variables considerd at each branch.
+### 2. Searching for the optimal number of trees and number of variables considerd at each branch.
 
 ```{r}
 
 set.seed(1)
+
+err.rate <- numeric(10)  # To store error rates for each mtry
+n.trees <- numeric(10)   # To store the number of optimal trees for each mtry
 
 for (m in 1:10) {
   forest_wine_quality_m <- randomForest(quality ~ ., data = wine_train, 
@@ -229,7 +233,7 @@ plot(n.trees); line(n.trees)
 # optimal solution is 501 trees and 8 variables considered at each branch. 
 
 ```
-### Cross Validation with Optimal number of trees and number of variables considerd at each branch.
+### 3. Cross Validation with Optimal number of trees and number of variables considerd at each branch.
 
 ```{r}
 
@@ -241,6 +245,81 @@ forest_cv_wine_quality <- randomForest(quality ~ ., data = wine_train,
 yhat_rf <- predict(forest_cv_wine_quality, newdata = wine_test, type = "class")
 
 forest_classification_rate <- mean(wine_test$quality == yhat_rf)
+
+```
+
+## Method # 4: Support Vecot Machines
+
+### 1. Creating a SVM model with a linear bounder
+
+```{r}
+
+SVM_wine_quality <- svm(quality ~ ., data = wine_train, kernel="linear")
+
+summary(SVM_wine_quality)
+
+```
+### 2. Tuning the SVM model to detiermen the optimal kernel and cost. 
+
+```{r}
+
+set.seed(1)
+
+svm_tuned <- tune(
+  svm,
+  quality ~ ., 
+  data = wine_train,
+  ranges = list(
+    cost = 10^seq(-2, 2, by = 1),  
+    kernel = c("linear", "polynomial", "radial", "sigmoid")  # Test multiple kernels
+  )
+)
+
+```
+
+```{r}
+
+summary(svm_tuned)
+
+# optimal cost is 10 with a radial boundary. 
+
+```
+### 3. Cross Validation with Optimal Cost and Kernal 
+
+```{r}
+
+SVM_wine_quality_optimal <- svm(quality ~ ., 
+                                data = wine_train, kernel="radial",
+                                cost = 100)
+
+summary(SVM_wine_quality_optimal)
+
+svm_yhat <- predict(SVM_wine_quality_optimal, data = wine_test)
+
+table(svm_yhat, wine_test$quality)
+
+svm_cv_classification_rate <- mean(svm_yhat == wine_test$quality)
+
+```
+## Summary: Which model preformed at predictiong the quality of a wine given it's chariterisitcs? 
+
+Using cross validation evaluating the performance of each model, the random forest model with 501 trees and 8 mrty produced the lowest error rate of 15.2%. 
+
+```{r}
+
+classification_rates <- data.frame(
+  Model = c("KNN", "Pruned Tree", "Random Forest", "SVM"),
+  'CV Classification Rate' = c(knn_cv_classification_rate,
+                         tree_pruned_classification_rate,
+                         forest_classification_rate,
+                         svm_cv_classification_rate),
+  'CV Error Rate' = c(1- knn_cv_classification_rate,
+                         1- tree_pruned_classification_rate,
+                         1- forest_classification_rate,
+                         1- svm_cv_classification_rate)
+)
+
+classification_rates 
 
 ```
 
