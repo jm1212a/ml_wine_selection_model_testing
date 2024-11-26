@@ -15,6 +15,8 @@ library(tree)
 library(randomForest)
 library(e1071)
 library(nnet)
+library(plotly)
+
 
 ```
 
@@ -369,6 +371,45 @@ classification_rates <- data.frame(
 
 classification_rates %>% 
   arrange(desc(Classification_Rate))
+
+```
+# Research Question #2: What are the characteristics of good Portuguese wine?  
+
+Quality categorical varibale follows a fairly normal distribution; therefore, Converting the variable back into a numeric value to cluster. The clusters with the highest average quality score should have the highest portion of high quality wine. We see the characteristics the wine critics are looking for in a good wine.
+
+```{r}
+
+plot(wine_data$quality)
+
+```
+
+
+```{r}
+
+set.seed(1)
+
+wine_data_numeric <- wine_data
+
+wine_data_numeric$quality <- as.numeric(wine_data_numeric$quality)
+
+wine_data_numeric %>% 
+  select(quality, alcohol, sulphates, volatile.acidity) -> wine_data_numeric
+  
+kmeans_result <- kmeans(wine_data_numeric, 6)
+
+kmeans_result
+
+```
+```{r}
+
+plot_ly(wine_data_numeric, 
+        x = ~alcohol, 
+        y = ~sulphates, 
+        z = ~volatile.acidity, 
+        color = as.factor(kmeans_result$cluster),  # Add cluster color
+        type = "scatter3d", 
+        mode = "markers",
+        marker = list(size = 3))
 
 ```
 
