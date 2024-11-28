@@ -5,27 +5,36 @@ date: "2024-11-27"
 output: pdf_document
 ---
 
-# Background
+## Background
 
 The wine industry is a blend of agriculture, science, art and business. The industry is make up of thousands vineyards across the globe with each wine producing country or region has there own unique climates and soil types. These factors, along with the type of grape grown and how the wine was aged can contribute significantly to the taste and quality of the wine. The sheer variety and complexity of wine makes confidently select a high quality wine for a weekend meal or a special celebration a challenge for consumers.
 
 To aid consumers in choosing a high quality wine, this paper explores using machine learning methods to create model to predict a wines quality based on it's chemical make up and examining the characteristics of a high quality wine.
 
-# Data
+## Data Set
 
 To model wine quality by chemical characteristics, this paper utilized data sets on Wine Quality donated to the UC Irvine Machine learning Repository[^1]. The donated data included two data sets which consisted of red and white wines sampled from northern Portugal from 2024 to 2007 by the local wine certification agency CVRVV. Across the two data sets there were 6497 observations of wines sampled. For privacy reasons the data did not include grape type, wine brand, selling price or vineyard name.
 
 [^1]: Cortez, P., Cerdeira, A., Almeida, F., Matos, T., & Reis, J. (2009). Wine Quality [Dataset]. UCI Machine Learning Repository. <https://doi.org/10.24432/C56S3T>.
 
-Both data sets did include 11 quantitative variables measuring curtain chimerical aspects for each wine sampled such as the amount of sulfates, alcohol level or PH of each wine. The data set also included one categorical ordinal variables measuring the quality of the wine measured. To measure the quality of wine, at least 3 taste testers had to evaluated each wine on a scale of 1 to 10. The final quality score is the median of all the test testers quality score. Given that the quality measurement is the median score, the lowest level of quality is 3 and the highest is an 8. Wine quality will be the only dependent variable for this paper.
+Both data sets did include 11 quantitative variables measuring curtain chimerical aspects for each wine sampled such as the amount of sulfates, alcohol level or PH of each wine. The data set also included one categorical ordinal variables measuring the quality of the wine measured. To measure the quality of wine, at least 3 taste testers had to evaluated each wine on a scale of 1 to 10. The final quality score is the median of all the taste testers quality score. Given that the quality measurement is the median score, the lowest level of quality is 3 and the highest is an 9. Quality will be the dependent variable in the prediction model.
 
-# Machine Learning and Cross Validation Methods 
+## Exploratory Data Analysis Using Clustering
 
-Given that there is more then two level of quality this paper explored the use of K-Nearest Neighbors, Classification Trees, Random Forest, Support Vector Machines and Artificial Neural Network to predict the quality of the wine. 
+Based on the summary statistics and the Shapiro-Wiles test calculated for each variable, the categorical variable quality follows a fairly normal distribution; therefore, for the prepossess of the following exploratory analysis quality was treated as numeric value. A table with the summary statistic and results for the Shapiro-Wiles test for all of variables can be found in the following table.
 
-To evaluate each method, the Validation Set method was used to measure the testing classification and error rates. In addition, confusions tables were used to analysis how each machine learning method preformed at classifying wines into the 6 quality categories. 
+Wines of very high and low quality have very few observations; therefore to better identify characteristics of high quality wine, K Means clustering was used to group the sample wines into 5 different clusters. Because quality follows a normal distribution, the clusters with the highest average quality score should have the highest portion of high quality wine. 
 
-Since the quality variable is ordinal the Mean Absolute Deviation (MAD) was also used to evaluate the accuracy of the machine learning methods. MAD preserve the order of the quality variable and measures how far off the predictions were when they miss the target. The lower MAD value a model has the better. MAD was calculated using the following formula.  
+Clustering relieved that wines with higher quality tend to have on average higher level of alcohol, and lower levels of sugar, chlorides, acidity and sulfates then wines of lesser quality wines. To determine if the group means between the group with the lowest and the highest quality means were statistical significant, a simple test was run across all of the variables. Below is a summary table of the results by indpendent variable. 
 
 
 
+## Machine Learning Methods
+
+Given that there is more then two level in our dependent variable, quality this paper explored the use of K-Nearest Neighbors, Classification Trees, Random Forest, Support Vector Machines and Artificial Neural Network to predict the quality of the wine.
+
+## Cross Validation Methods
+
+To evaluate each method, the Validation Set method was used to measure the testing classification and error rates. In addition, confusions tables were used to analysis how each machine learning method preformed at classifying wines into the 7 quality categories.
+
+Since the quality variable is ordinal the Mean Absolute Deviation (MAD) was also used to evaluate the accuracy of the machine learning methods. MAD preserve the order of the quality variable and measures how far off the predictions were when they miss the target. The lower MAD value a model has the better. MAD was calculated using the following formula.
