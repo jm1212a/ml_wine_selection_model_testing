@@ -1,0 +1,21 @@
+---
+title: "What Makes a Good Wine?"
+author: "By: Jared Martin"
+date: "2024-11-27"
+output: pdf_document
+---
+
+# Background
+
+The wine industry is a blend of agriculture, science, art and business. The industry is make up of thousands vineyards across the globe with each wine producing country or region has there own unique climates and soil types. These factors, along with the type of grape grown and how the wine was aged can contribute significantly to the taste and quality of the wine. The sheer variety and complexity of wine makes confidently select a high quality wine for a weekend meal or a special celebration a challenge for consumers.
+
+To aid consumers in choosing a high quality wine, this paper explores using machine learning methods to create model to predict a wines quality based on it's chemical make up and examining the characteristics of a high quality wine.
+
+# Data
+
+To model wine quality by chemical characteristics, this paper utilized data sets on Wine Quality donated to the UC Irvine Machine learning Repository[^1]. The donated data included two data sets which consisted of red and white wines sampled from northern Portugal from 2024 to 2007 by the local wine certification agency CVRVV. Across the two data sets there were 6497 observations (wines sampled). For privacy reasons the data did not include grape type, wine brand, selling price or vineyard name. Both data sets did include 11 quantitative variables measuring curtain chimerical aspects for each wine sampled such as the amount of sulfates, alcohol level or PH of each wine. The data set also included one categorical ordinal variables measuring the quality of the wine measured. To measure the quality of wine, at least 3 taste testers had to evaluated each wine on a scale of 1 to 10. The final quality score is the median of all the test testers quality score. 
+
+Wine quality will be the only dependent variable for this paper. 
+
+
+[^1]: Cortez, P., Cerdeira, A., Almeida, F., Matos, T., & Reis, J. (2009). Wine Quality [Dataset]. UCI Machine Learning Repository. <https://doi.org/10.24432/C56S3T>.

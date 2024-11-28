@@ -17,7 +17,6 @@ library(e1071)
 library(nnet)
 library(plotly)
 
-
 ```
 
 Group Members: 1 of 1 Jared Martin
@@ -26,21 +25,19 @@ Group Members: 1 of 1 Jared Martin
 
 The following code pulls in the two wine data sets, creates a new variable called wine type (red or white), makes quality and type factor variables, joins the two data sets together and saves the data as a csv.
 
+
 ```{r}
 
-rbind(read.csv("./Data/winequality-red.csv", sep = ";") %>%
-                     mutate(wine.type = "red"),
-                   read.csv("./Data/winequality-red.csv", sep = ";") %>%
-                     mutate(wine.type = "white"))  %>% 
+rbind(read.csv("./Data/winequality-red.csv", sep = ";"),
+                   read.csv("./Data/winequality-white.csv", sep = ";") 
+                     )  %>% 
   write.csv( "./Data/wine_data.csv")
 
 wine_data <- read_csv("./Data/wine_data.csv")
 
 wine_data$quality <- factor(wine_data$quality)
 
-wine_data$wine.type <- factor(wine_data$wine.type)
-
-wine_data[,2:14] -> wine_data
+wine_data[,2:13] -> wine_data
 
 wine_data %>% 
   dplyr::select(quality, everything()) -> wine_data
@@ -69,7 +66,7 @@ z <- sample(n, n/2)
 
 wine_test <- wine_data[z,]
 
-wine_train <- wine_data[-z,]
+wine_train <- wine_data[-z,][1:(n/2),]
 
 x.train <- wine_train[,2:12]
 x.test <- wine_test[,2:12]
@@ -108,26 +105,10 @@ table(y.test, knn_cv_wine_quality)
 
 knn_cv_classification_rate <- mean(y.test == knn_cv_wine_quality)
 
-# Classification rate of .766
+mad_knn <- mean(abs(as.numeric(wine_test$quality) - as.numeric(knn_cv_wine_quality)))
 
 ```
-### 4. LOOCV - CClasification Rate and Confusion table using Optimal number of nearest Neighbors.
 
-```{r}
-
-y.test <- wine_data$quality
-
-x.train <- wine_data[,2:12]
-
-knn_loocv_wine_quality <- knn.cv(x.train, y.test, k = 1, prob = FALSE)
-
-table(y.test, knn_loocv_wine_quality)
-
-knn_loocv_classification_rate <- mean(y.test == knn_loocv_wine_quality)
-
-#Wow! Classification rate of 1!
-
-```
 ## Method #2: Classification Trees
 
 ### 1. Classification Tree for Quality 
@@ -169,7 +150,7 @@ tree_cv_wine_quality
 
 plot(tree_cv_wine_quality)
 
-tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 6)
+tree_pruned_wine_quality <- prune.misclass(tree_wine_quality, best = 5)
 
 ```
 ### 4. Plotting Classification Tree
@@ -189,6 +170,8 @@ tree_hat <- predict(tree_pruned_wine_quality, wine_test, type = "class")
 table(tree_hat, wine_test$quality)
 
 tree_pruned_classification_rate <- mean(tree_hat == wine_test$quality)
+
+mad_tree <- mean(abs(as.numeric(wine_test$quality) - as.numeric(tree_hat)))
 
 ```
 ##Method #3: Random Forest
@@ -235,7 +218,7 @@ plot(err.rate); line(err.rate)
 
 plot(n.trees); line(n.trees)
 
-# optimal solution is 501 trees and 8 variables considered at each branch. 
+# optimal solution is 2192 trees and 2 variables considered at each branch. 
 
 ```
 ### 3. Cross Validation with Optimal number of trees and number of variables considerd at each branch.
@@ -245,11 +228,13 @@ plot(n.trees); line(n.trees)
 set.seed(1)
 
 forest_cv_wine_quality <- randomForest(quality ~ ., data = wine_train, 
-                                  mtry = 8, ntree = 501 )
+                                  mtry = 1, ntree = 2480 )
 
 yhat_rf <- predict(forest_cv_wine_quality, newdata = wine_test, type = "class")
 
 forest_classification_rate <- mean(wine_test$quality == yhat_rf)
+
+mad_forest <- mean(abs(as.numeric(wine_test$quality) - as.numeric(yhat_rf)))
 
 ```
 
@@ -296,15 +281,21 @@ summary(svm_tuned)
 SVM_wine_quality_optimal <- svm(quality ~ ., 
                                 data = wine_train, 
                                 kernel="radial",
-                                cost = 100)
+                                cost = 10)
 
 summary(SVM_wine_quality_optimal)
 
 svm_yhat <- predict(SVM_wine_quality_optimal, data = wine_test)
 
+length(svm_yhat)
+
+length(wine_test$quality)
+
 table(svm_yhat, wine_test$quality)
 
 svm_cv_classification_rate <- mean(svm_yhat == wine_test$quality)
+
+mad_svm <- mean(abs(as.numeric(wine_test$quality) - as.numeric(svm_yhat)))
 
 ```
 ## Method #5: Artifical Neural Nextwork
@@ -329,7 +320,7 @@ err.rate
 
 plot(err.rate)
 
-# 11 hidden nodes produce the lowest prediction error rate
+# 9 hidden nodes produce the lowest prediction error rate
 
 ```
 ### 2. Cross Validation with Optimal number of hidden nodes
@@ -340,14 +331,15 @@ set.seed(1)
 
 ann_wine_quality_optimal <- nnet(quality ~ ., 
                          data = wine_train,
-                         size = 11)
+                         size = 5)
 
-yhat_ann <- predict(ann_wine_quality, newdata = wine_test, type = "class")
+yhat_ann <- predict(ann_wine_quality_optimal, newdata = wine_test, type = "class")
   
 ann_classification_rate <- mean(wine_test$quality == yhat_ann)
 
-```
+mad_ann <- mean(abs(as.numeric(wine_test$quality) - as.numeric(yhat_ann)))
 
+```
 
 ## Summary: Which model preformed at predictiong the quality of a wine given it's chariterisitcs? 
 
@@ -375,7 +367,9 @@ classification_rates %>%
 ```
 # Research Question #2: What are the characteristics of good Portuguese wine?  
 
-Quality categorical varibale follows a fairly normal distribution; therefore, Converting the variable back into a numeric value to cluster. The clusters with the highest average quality score should have the highest portion of high quality wine. We see the characteristics the wine critics are looking for in a good wine.
+## Method #6: Clustering - K Means
+
+Quality categorical variable follows a fairly normal distribution; therefore, Converting the variable back into a numeric value to cluster. The clusters with the highest average quality score should have the highest portion of high quality wine. We see the characteristics the wine critics are looking for in a good wine.
 
 ```{r}
 
@@ -409,7 +403,12 @@ plot_ly(wine_data_numeric,
         color = as.factor(kmeans_result$cluster),  # Add cluster color
         type = "scatter3d", 
         mode = "markers",
-        marker = list(size = 3))
+        marker = list(size = 2))%>%
+  layout(scene = list(
+    xaxis = list(title = "Alcohol"), 
+    yaxis = list(title = "Sulphates"), 
+    zaxis = list(title = "Acidity")  
+  ))
 
 ```
 
