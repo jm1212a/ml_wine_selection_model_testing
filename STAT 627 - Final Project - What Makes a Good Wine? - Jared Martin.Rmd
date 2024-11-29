@@ -19,21 +19,25 @@ To model wine quality by chemical characteristics, this paper utilized data sets
 
 Both data sets did include 11 quantitative variables measuring curtain chimerical aspects for each wine sampled such as the amount of sulfates, alcohol level or PH of each wine. The data set also included one categorical ordinal variables measuring the quality of the wine measured. To measure the quality of wine, at least 3 taste testers had to evaluated each wine on a scale of 1 to 10. The final quality score is the median of all the taste testers quality score. Given that the quality measurement is the median score, the lowest level of quality is 3 and the highest is an 9. Quality will be the dependent variable in the prediction model.
 
-## Exploratory Data Analysis Using Clustering
 
-Based on the summary statistics and the Shapiro-Wiles test calculated for each variable, the categorical variable quality follows a fairly normal distribution; therefore, for the prepossess of the following exploratory analysis quality was treated as numeric value. A table with the summary statistic and results for the Shapiro-Wiles test for all of variables can be found in the following table.
+## Exploratory Data Analysis
 
-Wines of very high and low quality have very few observations; therefore to better identify characteristics of high quality wine, K Means clustering was used to group the sample wines into 5 different clusters. Because quality follows a normal distribution, the clusters with the highest average quality score should have the highest portion of high quality wine. 
+A table with the summary statistic and the results for the Shapiro-Wiles test for normality for all of the variables can be found in the following table.
+Based the Shapiro-Wiles test calculated for all of the variables, the categorical variable "quality" follows a fairly normal distribution; therefore, for the prepossess of the following clustering analysis "quality" was treated as numeric value. 
 
-Clustering relieved that wines with higher quality tend to have on average higher level of alcohol, and lower levels of sugar, chlorides, acidity and sulfates then wines of lesser quality wines. To determine if the group means between the group with the lowest and the highest quality means were statistical significant, a simple test was run across all of the variables. Below is a summary table of the results by indpendent variable. 
+## Idntifing Key Chartersitics of High Quality Wine Using Clustering
 
+Wines of very high and low quality have very few observations. To better identify characteristics of high quality wines, K Means clustering was used to group the sample wines into 5 different clusters of roughly equal size. Because quality follows a normal distribution, the clusters with the highest average quality score should have the highest portion of high quality wine. 
 
+Clustering relieved that wines with higher quality tend to have on average higher level of alcohol, and lower levels of sugar, chlorides, acidity and sulfates than wines of lesser quality wines. 
 
-## Machine Learning Methods
+To determine if the difference in cluster means was statistical significantly between the lowest and the highest quality clusters, a simple test was run across all of the variables. Below is a summary table of the results by independent variables. Across all 11 independent variables, the cluster mean for both groups were significant at a alpha level of .01. 
+
+## Machine Learning Methods Used to Predict Quality
 
 Given that there is more then two level in our dependent variable, quality this paper explored the use of K-Nearest Neighbors, Classification Trees, Random Forest, Support Vector Machines and Artificial Neural Network to predict the quality of the wine.
 
-## Cross Validation Methods
+## Cross Validation Methods Used to Efaluate the models
 
 To evaluate each method, the Validation Set method was used to measure the testing classification and error rates. In addition, confusions tables were used to analysis how each machine learning method preformed at classifying wines into the 7 quality categories.
 
