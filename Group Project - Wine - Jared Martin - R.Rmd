@@ -4,7 +4,6 @@ author: "Jared Martin"
 date: "2024-11-24"
 output:
   pdf_document: default
-
 ---
 
 ```{r}
@@ -46,9 +45,85 @@ wine_data %>%
   dplyr::select(quality, everything()) -> wine_data
 
 ```
-# Research Question #1: Can we predict the quality of a wine given its characteristic?
+# Research Question #1: What are the characteristics of good Portuguese wine?  
 
-Each wine was given as ranking for quality between 0-10. Although in the data set the lowest level of quality is 3, while the highest is an 8. Given that there is more then two level of quality we will be using KKN and classification trees to predict the quality of the wine given it's characteristics. 
+## Method #6: Clustering - K Means
+
+### 1. Summary Statistics
+
+```{r}
+
+plot(wine_data$quality)
+
+```
+
+```{r}
+
+set.seed(1)
+
+wine_data_numeric <- wine_data %>% 
+  select(-type)
+
+wine_data_numeric$quality <- as.numeric(wine_data_numeric$quality)
+
+custom_summary <- wine_data_numeric %>%
+  summarise_all(list(
+    Mean = ~ mean(., na.rm = TRUE),
+    Median = ~ median(., na.rm = TRUE),
+    SD = ~ sd(., na.rm = TRUE),
+    Min = ~ min(., na.rm = TRUE),
+    Max = ~ max(., na.rm = TRUE),
+    shapirowilks = ~ shapiro.test(sample(., size = 4999))$p.value
+  )) %>%
+  pivot_longer(cols = everything(), 
+               names_to = c("Variable", "Statistic"), 
+               names_sep = "_") %>%
+  pivot_wider(names_from = Statistic, values_from = value) %>% 
+ write_csv( "./Data/summary.csv")
+
+```
+
+Quality categorical variable follows a fairly normal distribution; therefore, Converting the variable back into a numeric value to cluster. The clusters with the highest average quality score should have the highest portion of high quality wine. We see the characteristics the wine critics are looking for in a good wine.
+
+### 2. K-Means Clustering
+
+```{r}
+
+kmeans_result <- kmeans(wine_data_numeric, 6)
+
+kmeans_result
+
+```
+
+### 3. Results of the T-test on the sample means of the lowest and highest clusters accross all varaibles.
+
+```{r}
+
+wine_data_numeric$cluster <- as.factor(kmeans_result$cluster)
+
+wine_data_numeric %>%
+  filter(cluster %in% c(4, 6)) %>%  
+  select(-cluster) %>% 
+  summarise(across(everything(), 
+                   ~ {
+                     test_result <- t.test(. ~ wine_data_numeric$cluster[wine_data_numeric$cluster %in% c(4, 6)])
+                     c(t_stat = test_result$statistic, 
+                       p_value = test_result$p.value)
+                   }, 
+                   .names = "{col}_t_test")) %>%
+  pivot_longer(everything(), names_to = "Variable", 
+               values_to = "Test_Result") %>%
+  mutate(Statistic = rep(c("T Statistic", "P Value"), 
+                         each =  ncol(wine_data_numeric) - 1)) %>%
+  pivot_wider(names_from = Statistic , values_from = Test_Result) %>% 
+  separate(Variable, into = c("Variable", "Type"), sep = "_") %>% 
+  mutate(`High Quality Wine has ...` = case_when(
+    `T Statistic` > 0 ~ "Lower Level",
+    `T Statistic` <= 0 ~ "Higher Level")) %>% 
+  select(-Type) -> table_t
+
+```
+# Research Question #2: Can we predict the quality of a wine given its characteristic?
 
 ```{r}
 
@@ -231,9 +306,11 @@ plot(n.trees); line(n.trees)
 set.seed(1)
 
 forest_cv_wine_quality <- randomForest(quality ~ ., data = wine_train, 
-                                  mtry = 1, ntree = 2480 )
+                                  mtry = 3, ntree =  2423 )
 
 yhat_rf <- predict(forest_cv_wine_quality, newdata = wine_test, type = "class")
+
+table(wine_test$quality, yhat_rf)
 
 forest_classification_rate <- mean(wine_test$quality == yhat_rf)
 
@@ -334,10 +411,12 @@ set.seed(1)
 
 ann_wine_quality_optimal <- nnet(quality ~ ., 
                          data = wine_train,
-                         size = 5)
+                         size = 9)
 
 yhat_ann <- predict(ann_wine_quality_optimal, newdata = wine_test, type = "class")
   
+table(wine_test$quality, yhat_ann)
+
 ann_classification_rate <- mean(wine_test$quality == yhat_ann)
 
 mad_ann <- mean(abs(as.numeric(wine_test$quality) - as.numeric(yhat_ann)))
@@ -370,86 +449,10 @@ classification_rates <- data.frame(
 )
 
 classification_rates %>% 
-  arrange(desc(Classification_Rate))
-
-```
-# Research Question #2: What are the characteristics of good Portuguese wine?  
-
-## Method #6: Clustering - K Means
-
-Quality categorical variable follows a fairly normal distribution; therefore, Converting the variable back into a numeric value to cluster. The clusters with the highest average quality score should have the highest portion of high quality wine. We see the characteristics the wine critics are looking for in a good wine.
-
-```{r}
-
-plot(wine_data$quality)
-
-```
-### 1. K-Means Clustering
-
-```{r}
-
-set.seed(1)
-
-wine_data_numeric <- wine_data %>% 
-  select(-type)
-
-wine_data_numeric$quality <- as.numeric(wine_data_numeric$quality)
-
-kmeans_result <- kmeans(wine_data_numeric, 6)
-
-kmeans_result
-
-```
-### 2. Summary Statistics
-
-```{r}
-
-custom_summary <- wine_data_numeric %>%
-  summarise_all(list(
-    Mean = ~ mean(., na.rm = TRUE),
-    Median = ~ median(., na.rm = TRUE),
-    SD = ~ sd(., na.rm = TRUE),
-    Min = ~ min(., na.rm = TRUE),
-    Max = ~ max(., na.rm = TRUE),
-    shapirowilks = ~ shapiro.test(sample(., size = 4999))$p.value
-  )) %>%
-  pivot_longer(cols = everything(), 
-               names_to = c("Variable", "Statistic"), 
-               names_sep = "_") %>%
-  pivot_wider(names_from = Statistic, values_from = value) %>% 
- write_csv( "./Data/summary.csv")
-
+  arrange(desc(Error_Rate))
 
 ```
 
-### 3. Results of the T-test on the sample means of the lowest and highest clusters accross all varaibles.
-
-```{r}
-
-wine_data_numeric$cluster <- as.factor(kmeans_result$cluster)
-
-wine_data_numeric %>%
-  filter(cluster %in% c(4, 6)) %>%  
-  select(-cluster) %>% 
-  summarise(across(everything(), 
-                   ~ {
-                     test_result <- t.test(. ~ wine_data_numeric$cluster[wine_data_numeric$cluster %in% c(4, 6)])
-                     c(t_stat = test_result$statistic, 
-                       p_value = test_result$p.value)
-                   }, 
-                   .names = "{col}_t_test")) %>%
-  pivot_longer(everything(), names_to = "Variable", 
-               values_to = "Test_Result") %>%
-  mutate(Statistic = rep(c("T Statistic", "P Value"), 
-                         each =  ncol(wine_data_numeric) - 1)) %>%
-  pivot_wider(names_from = Statistic , values_from = Test_Result) %>% 
-  separate(Variable, into = c("Variable", "Type"), sep = "_") %>% 
-  mutate(`High Quality Wine has ...` = case_when(
-    `T Statistic` > 0 ~ "Lower Level",
-    `T Statistic` <= 0 ~ "Higher Level"))
-
-
-```
 
 
 
