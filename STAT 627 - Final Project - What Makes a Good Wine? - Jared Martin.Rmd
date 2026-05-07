@@ -19,25 +19,6 @@ To model the wine's quality as determined by its chemical characteristics, this 
 
 Both data sets included 11 quantitative variables to measure certain chemical aspects for each wine sampled — such as the amount of sulfates, alcohol level, or pH of each wine. The data set also included 1 categorical, ordinal variable measuring the quality of the wine. To determine the quality, at least 3 taste testers evaluated each wine on a scale of 1 to 10. The final quality score is the median of all the taste testers' quality scores. As a result, the lowest level of quality is scored as 3 and the highest is scored as a 9. Quality is the dependent variable in the following prediction models.
 
-## Exploratory Data Analysis
-
-Below is a table with the summary statistics and the results of a Shapiro-Wilks test for normality. Based on the Shapiro-Wilks test, all of the variables are normally distributed — including the categorical variable "quality." Therefore, "quality" was treated as numeric value in the following cluster analysis.
-
-| Variable | Mean | Median | SD | Min | Max | Shapiro-Wilks P-Value |
-|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| quality | 3.818 | 4.000 | 0.873 | 1.000 | 7.000 | 0.000 |
-| fixed.acidity | 7.215 | 7.000 | 1.296 | 3.800 | 15.900 | 0.000 |
-| volatile.acidity | 0.340 | 0.290 | 0.165 | 0.080 | 1.580 | 0.000 |
-| citric.acid | 0.319 | 0.310 | 0.145 | 0.000 | 1.660 | 0.000 |
-| residual.sugar | 5.443 | 3.000 | 4.758 | 0.600 | 65.800 | 0.000 |
-| chlorides | 0.056 | 0.047 | 0.035 | 0.009 | 0.611 | 0.000 |
-| free.sulfur.dioxide | 30.525 | 29.000 | 17.749 | 1.000 | 289.000 | 0.000 |
-| total.sulfur.dioxide | 115.745 | 118.000 | 56.522 | 6.000 | 440.000 | 0.000 |
-| density | 0.995 | 0.995 | 0.003 | 0.987 | 1.039 | 0.000 |
-| pH | 3.219 | 3.210 | 0.161 | 2.720 | 4.010 | 0.000 |
-| sulphates | 0.531 | 0.510 | 0.149 | 0.220 | 2.000 | 0.000 |
-| alcohol | 10.492 | 10.300 | 1.193 | 8.000 | 14.900 | 0.000 |
-
 ## Identifying Key Characteristics of High-Quality Wine Using Clustering
 
 Wines of very high (score of 9) and low quality (score of 3) have very few observations. To better identify characteristics of high-quality wines versus wines of lower quality, K Means Clustering was used to group the sample wines into 5 clusters of roughly equal size. Because quality follows a normal distribution, the clusters with the highest average quality score should have the highest portion of high-quality wine.
